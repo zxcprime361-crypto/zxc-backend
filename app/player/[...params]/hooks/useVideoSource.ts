@@ -73,16 +73,25 @@ export function useVideoSource({
           if (!data.fatal) return;
           if (failedRef.current) return;
 
+          // Always try to recover media errors
           if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
             hls.recoverMediaError();
             return;
           }
 
-          failedRef.current = true;
-          updateServerStatus(serverIndex, "failed");
-          hls.off(Hls.Events.ERROR);
-          hls.destroy();
+          // Only fail server on unrecoverable network errors
+          if (
+            data.type === Hls.ErrorTypes.NETWORK_ERROR &&
+            (data.details === Hls.ErrorDetails.MANIFEST_LOAD_ERROR ||
+              data.details === Hls.ErrorDetails.KEY_LOAD_ERROR)
+          ) {
+            failedRef.current = true;
+            updateServerStatus(serverIndex, "failed");
+            hls.off(Hls.Events.ERROR);
+            hls.destroy();
+          }
         });
+
         return () => {
           hls.destroy();
           hlsRef.current = null;

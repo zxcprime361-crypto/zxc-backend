@@ -552,17 +552,16 @@ export default function Player() {
                   onPointerDown={(e) => {
                     e.stopPropagation();
                     if (e.pointerType === "touch") {
-                      togglePlay();
                       resetTimer();
                     }
                   }}
                   onPointerUp={(e) => {
                     e.stopPropagation();
                     if (e.pointerType === "mouse") {
-                      togglePlay();
                       resetTimer();
                     }
                   }}
+                  onClick={togglePlay}
                 >
                   {isPlaying ? (
                     <motion.div
