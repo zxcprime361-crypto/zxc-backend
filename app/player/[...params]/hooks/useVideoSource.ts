@@ -114,8 +114,14 @@ export function useVideoSource({
             }
 
             case Hls.ErrorTypes.MEDIA_ERROR:
-              console.warn("Recovering media error");
-              hls.recoverMediaError();
+              // Try to recover from media errors (including parsing errors)
+              if (errorData.details === Hls.ErrorDetails.FRAG_PARSING_ERROR) {
+                console.warn("Fragment parsing error, attempting recovery");
+                hls.recoverMediaError();
+              } else {
+                console.warn("Recovering media error");
+                hls.recoverMediaError();
+              }
               break;
 
             default:
