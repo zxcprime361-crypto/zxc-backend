@@ -28,8 +28,7 @@ export function useVideoSource({
   const [audioTracks, setAudioTracks] = useState<AudioTrackTypes[]>([]);
   const [selectedQuality, setSelectedQuality] = useState<number>(-1);
   const [selectedAudio, setSelectedAudio] = useState<number>(0);
-  const [networkError, setIsNetworkError] = useState(false);
-  const segmentRetryRef = useRef(0);
+  const failedRef = useRef(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -40,8 +39,7 @@ export function useVideoSource({
       hlsRef.current.destroy();
       hlsRef.current = null;
     }
-    setIsNetworkError(false);
-    segmentRetryRef.current = 0;
+    failedRef.current = false;
     if (source.type === "hls") {
       if (Hls.isSupported()) {
         const hls = new Hls({
@@ -71,71 +69,18 @@ export function useVideoSource({
             hls.audioTrack = selectedIndex;
           }
         });
-        // hls.on(Hls.Events.ERROR, (_, errorData) => {
-        //   console.log("HLS error", errorData);
-
-        //   if (!errorData.fatal) return;
-
-        //   switch (errorData.type) {
-        //     case Hls.ErrorTypes.NETWORK_ERROR: {
-        //       switch (errorData.details) {
-        //         case Hls.ErrorDetails.FRAG_LOAD_ERROR:
-        //         case Hls.ErrorDetails.FRAG_LOAD_TIMEOUT: {
-        //           segmentRetryRef.current += 1;
-
-        //           if (segmentRetryRef.current <= 1) {
-        //             console.warn("Retrying segment...");
-        //             hls.startLoad();
-        //           } else {
-        //             console.error("Segment failed permanently");
-        //             setIsNetworkError(true);
-        //             updateServerStatus(serverIndex, "failed");
-        //             hls.destroy();
-        //           }
-        //           break;
-        //         }
-
-        //         case Hls.ErrorDetails.MANIFEST_LOAD_ERROR:
-        //         case Hls.ErrorDetails.LEVEL_LOAD_ERROR:
-        //         case Hls.ErrorDetails.KEY_LOAD_ERROR: {
-        //           console.error("Playlist / key error");
-        //           setIsNetworkError(true);
-        //           updateServerStatus(serverIndex, "failed");
-        //           hls.destroy();
-        //           break;
-        //         }
-
-        //         default:
-        //           setIsNetworkError(true);
-        //           updateServerStatus(serverIndex, "failed");
-        //           hls.destroy();
-        //       }
-        //       break;
-        //     }
-
-        //     case Hls.ErrorTypes.MEDIA_ERROR:
-        //       console.warn("Recovering media error");
-        //       hls.recoverMediaError();
-        //       break;
-
-        //     default:
-        //       setIsNetworkError(true);
-        //       updateServerStatus(serverIndex, "failed");
-        //       hls.destroy();
-        //       break;
-        //   }
-        // });
         hls.on(Hls.Events.ERROR, (_, data) => {
           if (!data.fatal) return;
+          if (failedRef.current) return;
 
           if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
             hls.recoverMediaError();
             return;
           }
 
-          // Network or unknown fatal error
-          setIsNetworkError(true);
+          failedRef.current = true;
           updateServerStatus(serverIndex, "failed");
+          hls.off(Hls.Events.ERROR);
           hls.destroy();
         });
         return () => {
@@ -170,7 +115,7 @@ export function useVideoSource({
     setQuality,
     selectedQuality,
     setSelectedQuality,
-    networkError,
+
     audioTracks,
     setAudioTracks,
     selectedAudio,

@@ -120,7 +120,6 @@ export default function Player() {
     audioTracks,
     selectedAudio,
     setSelectedAudio,
-    networkError,
   } = useVideoSource({
     videoRef,
     source,
