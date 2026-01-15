@@ -1,7 +1,13 @@
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import { NextRequest, NextResponse } from "next/server";
-import { validateBackendToken } from "../1/route";
+import { validateBackendToken } from "../0/route";
 
+type Sources = {
+  link: string;
+  type: string;
+  language: string;
+  server: string;
+};
 export async function GET(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get("a");
@@ -49,8 +55,8 @@ export async function GET(req: NextRequest) {
 
     const upstreamM3u8 =
       media_type === "tv"
-        ? `https://noticiastumbes.com/embed/play.php?id=${id}&season=${season}&episode=${episode}`
-        : `https://noticiastumbes.com/embed/play.php?id=${id}`;
+        ? `https://noticiastumbes.com/embed/xd/play.php?id=${id}&season=${season}&episode=${episode}`
+        : `https://noticiastumbes.com/embed/xd/play.php?id=${id}`;
 
     try {
       const res = await fetchWithTimeout(
@@ -68,10 +74,15 @@ export async function GET(req: NextRequest) {
       );
 
       const data = await res.json();
-      console.log("asas", data);
+      console.log("reeeeeeeeeeeeeeeeeeeeees", data);
+
+      const spanish = data.sources.find(
+        (f: Sources) => f.language === "latino"
+      ).link;
+      console.log("liiiiiiiiiiiiiiiiiiiiiiiiink", spanish);
       return NextResponse.json({
         success: true,
-        link: data.link,
+        link: spanish,
         type: "hls",
       });
     } catch (err) {

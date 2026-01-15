@@ -93,7 +93,7 @@ export default function Player() {
     isPiPActive,
     togglePiP,
   } = useVideoPlayer({ videoRef, id, media_type, season, episode });
-  console.log("isInitializing", isInitializing);
+  // console.log("isInitializing", isInitializing);
   const {
     server,
     servers,
@@ -379,7 +379,9 @@ export default function Player() {
                   }`}
                 >
                   <h1
-                    className={`${
+                    className={` transition-transform duration-200 ${
+                      s.status === "failed" ? "line-through" : ""
+                    } ${
                       idx === serverIndex
                         ? "lg:text-4xl text-xl font-bold"
                         : idx === serverIndex + 1
@@ -396,7 +398,7 @@ export default function Player() {
                     {s.name}
                   </h1>
                   <h3
-                    className={`${
+                    className={`transition-transform duration-200${
                       idx === serverIndex
                         ? "text-foreground/80"
                         : idx === serverIndex + 1

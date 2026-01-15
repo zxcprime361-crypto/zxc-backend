@@ -1,14 +1,22 @@
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import { NextRequest, NextResponse } from "next/server";
-import { validateBackendToken } from "../1/route";
-
+import { validateBackendToken } from "../0/route";
+type NoticiasTypes = {
+  success: boolean;
+  sources: Sources[];
+};
+type Sources = {
+  link: string;
+  type: string;
+  language: string;
+  server: string;
+};
 export async function GET(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get("a");
     const media_type = req.nextUrl.searchParams.get("b");
     const season = req.nextUrl.searchParams.get("c");
     const episode = req.nextUrl.searchParams.get("d");
-    const imdbId = req.nextUrl.searchParams.get("e");
     const ts = Number(req.nextUrl.searchParams.get("gago"));
     const token = req.nextUrl.searchParams.get("putanginamo")!;
 
@@ -50,45 +58,42 @@ export async function GET(req: NextRequest) {
 
     const upstreamM3u8 =
       media_type === "tv"
-        ? `https://scrennnifu.click/serial/${imdbId}/${season}/${episode}/playlist.m3u8`
-        : `https://scrennnifu.click/movie/${imdbId}/playlist.m3u8`;
+        ? `https://noticiastumbes.com/embed/xd/play.php?id=${id}&season=${season}&episode=${episode}`
+        : `https://noticiastumbes.com/embed/xd/play.php?id=${id}`;
 
     try {
-      const upstream = await fetchWithTimeout(
+      const res = await fetchWithTimeout(
         upstreamM3u8,
         {
           headers: {
-            Referer: "https://screenify.fun/",
-            Origin: "https://screenify.fun/",
+            Referer: "https://noticiastumbes.com/",
+            Origin: "https://noticiastumbes.com/",
             "User-Agent": "Mozilla/5.0",
             Accept: "*/*",
           },
           cache: "no-store",
         },
-        12000 // 5-second timeout
+        8000 // 5-second timeout
       );
 
-      if (!upstream.ok) {
-        return NextResponse.json(
-          { success: false, error: `${upstream.status}` },
-          { status: 502 }
-        );
-      }
+      const data = await res.json();
+      console.log("reeeeeeeeeeeeeeeeeeeeees", data);
+
+      const spanish = data.sources.find(
+        (f: Sources) => f.language === "english"
+      ).link;
+      console.log("liiiiiiiiiiiiiiiiiiiiiiiiink", spanish);
+      return NextResponse.json({
+        success: true,
+        link: spanish,
+        type: "hls",
+      });
     } catch (err) {
       return NextResponse.json(
         { success: false, error: "Timed out" },
         { status: 504 }
       );
     }
-
-    const sourceLink = `/api/zxc?id=${media_type}-${imdbId}${
-      media_type === "tv" ? `-${season}-${episode}` : ""
-    }`;
-    return NextResponse.json({
-      success: true,
-      link: sourceLink,
-      type: "hls",
-    });
   } catch (err) {
     return NextResponse.json(
       { success: false, error: "Internal server error" },

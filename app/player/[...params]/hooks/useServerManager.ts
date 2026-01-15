@@ -34,13 +34,17 @@ export function useServerManager({
   defaultServer: number;
 }) {
   const [servers, setServers] = useState<ServerTypes[]>([
-    { name: "Main Server", server: 0, status: "queue", desc: "" },
-    { name: "Server 1", server: 1, status: "queue", desc: "" },
+    { name: "ZXC Server", server: 0, status: "queue", desc: "" },
+    { name: "Main Server", server: 1, status: "queue", desc: "" },
     { name: "Server 2", server: 2, status: "queue", desc: "" },
     { name: "Server 3", server: 3, status: "queue", desc: "" },
     { name: "Server 4", server: 4, status: "queue", desc: "" },
     { name: "Server 5", server: 5, status: "queue", desc: "" },
-    { name: "Server 6", server: 6, status: "queue", desc: "Spanish" },
+    { name: "Español Server", server: 6, status: "queue", desc: "" },
+    { name: "Latino Server", server: 7, status: "queue", desc: "" },
+    { name: "Backup 1", server: 50, status: "queue", desc: "" },
+    { name: "Backup 2", server: 60, status: "queue", desc: "" },
+    { name: "Backup 3", server: 70, status: "queue", desc: "" },
   ]);
   const [serverIndex, setServerIndex] = useState(defaultServer);
   const [serversFailed, setAllServersFailed] = useState(false);

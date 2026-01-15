@@ -1,6 +1,7 @@
+import { encodeBase64Url } from "@/lib/base64";
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import { NextRequest, NextResponse } from "next/server";
-import { validateBackendToken } from "../1/route";
+import { validateBackendToken } from "../0/route";
 
 export async function GET(req: NextRequest) {
   try {
@@ -8,7 +9,6 @@ export async function GET(req: NextRequest) {
     const media_type = req.nextUrl.searchParams.get("b");
     const season = req.nextUrl.searchParams.get("c");
     const episode = req.nextUrl.searchParams.get("d");
-    const imdbId = req.nextUrl.searchParams.get("e");
     const ts = Number(req.nextUrl.searchParams.get("gago"));
     const token = req.nextUrl.searchParams.get("putanginamo")!;
 
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
     if (
       !referer.includes("/api/") &&
       !referer.includes("localhost") &&
-      !referer.includes("http://192.168.1.4:3000/") &&
+      !referer.includes("http://192.168.1.6:3000/") &&
       !referer.includes("https://www.zxcstream.xyz/")
     ) {
       return NextResponse.json(
@@ -48,45 +48,66 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const upstreamM3u8 =
-      media_type === "tv"
-        ? `https://scrennnifu.click/serial/${imdbId}/${season}/${episode}/playlist.m3u8`
-        : `https://scrennnifu.click/movie/${imdbId}/playlist.m3u8`;
+    const pathLink = `https://enc-dec.app/api/enc-vidlink?text=${id}`;
 
-    try {
-      const upstream = await fetchWithTimeout(
-        upstreamM3u8,
-        {
-          headers: {
-            Referer: "https://screenify.fun/",
-            Origin: "https://screenify.fun/",
-            "User-Agent": "Mozilla/5.0",
-            Accept: "*/*",
-          },
-          cache: "no-store",
+    const pathLinkResponse = await fetchWithTimeout(
+      pathLink,
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+          Referer: "https://vidlink.pro/",
         },
-        12000 // 5-second timeout
-      );
+      },
+      5000
+    );
 
-      if (!upstream.ok) {
-        return NextResponse.json(
-          { success: false, error: `${upstream.status}` },
-          { status: 502 }
-        );
-      }
-    } catch (err) {
+    const pathLinkData = await pathLinkResponse.json();
+
+    const sourceLink =
+      media_type === "tv"
+        ? `https://vidlink.pro/api/b/tv/${pathLinkData.result}/${season}/${episode}`
+        : `https://vidlink.pro/api/b/movie/${pathLinkData.result}`;
+
+    const res = await fetchWithTimeout(
+      sourceLink,
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+          Referer: "https://vidlink.pro/",
+        },
+      },
+      8000
+    );
+
+    if (!res.ok) {
       return NextResponse.json(
-        { success: false, error: "Timed out" },
-        { status: 504 }
+        { success: false, error: "Upstream request failed" },
+        { status: res.status }
       );
     }
 
-    const sourceLink = `/api/zxc?id=${media_type}-${imdbId}${
-      media_type === "tv" ? `-${season}-${episode}` : ""
-    }`;
+    const data = await res.json();
+
+    if (!data.stream.playlist) {
+      return NextResponse.json(
+        { success: false, error: "No sources found" },
+        { status: 404 }
+      );
+    }
+
+    const m3u8Url = data.stream.playlist; // e.g. https://storm.vodvidl.site/proxy/file2/.../playlist.m3u8?...
+
+    // Extract only the pathname (everything starting from /proxy/...)
+    const urlObj = new URL(m3u8Url);
+    const proxyPath = urlObj.pathname; // → /proxy/file2/.../playlist.m3u8
+
+    // Optional: preserve query params if needed (e.g. host=), but we don't need headers anymore
+    const search = urlObj.search; // usually has ?headers=...&host=...
+
+    const finalProxyLink = `https://blue-hat-477a.jerometecson333.workers.dev${proxyPath}${search}`;
     return NextResponse.json({
-      success: true,
-      link: sourceLink,
+      success: 200,
+      link: finalProxyLink,
       type: "hls",
     });
   } catch (err) {

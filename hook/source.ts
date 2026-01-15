@@ -26,7 +26,7 @@ export default function useSource({
     queryKey: ["get-source", id, media_type, season, episode, imdbId, server],
     enabled: !!id && !!imdbId,
     queryFn: async () => {
-      if ([0, 1, 2, 3, 4, 8].includes(server)) {
+      if ([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(server)) {
         const { f_token, f_ts } = generateFrontendToken(String(id));
 
         const tokenRes = await axios.post("/api/token", {
@@ -45,7 +45,7 @@ export default function useSource({
         );
 
         return res.data;
-      } else if (server === 5) {
+      } else if (server === 50) {
         const url =
           media_type === "tv"
             ? `https://play.xpass.top/mov/${id}/${season}/${episode}/0/playlist.json`
@@ -61,7 +61,7 @@ export default function useSource({
           success: true,
         };
         return structure;
-      } else if (server === 6) {
+      } else if (server === 60) {
         const url =
           media_type === "tv"
             ? `https://play.xpass.top/meg/tv/${id}/${season}/${episode}/playlist.json`
@@ -77,7 +77,7 @@ export default function useSource({
           success: true,
         };
         return structure;
-      } else if (server === 7) {
+      } else if (server === 70) {
         const url =
           media_type === "tv"
             ? `https://play.xpass.top/box/tv/${id}/${season}/${episode}/playlist.json`

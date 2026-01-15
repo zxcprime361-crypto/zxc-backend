@@ -1,8 +1,7 @@
 import { encodeBase64Url } from "@/lib/base64";
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
-const SECRET = process.env.API_SECRET!;
+import { validateBackendToken } from "../0/route";
 
 export async function GET(req: NextRequest) {
   try {
@@ -51,97 +50,49 @@ export async function GET(req: NextRequest) {
 
     const sourceLink =
       media_type === "tv"
-        ? `https://api.madplay.site/api/rogflix?id=${id}&season=${season}&episode=${episode}&type=series`
-        : `https://cdn.madplay.site/api/hls/unknown/${id}/master.m3u8`;
+        ? `https://vasurajput12345-fleet1.hf.space/api/extract?tmdbId=${id}&type=tv&season=${season}&episode=${episode}`
+        : `https://vasurajput12345-fleet1.hf.space/api/extract?tmdbId=${id}&type=movie`;
 
-    if (media_type === "tv") {
-      // const res = await fetch(sourceLink, {
-      //   headers: {
-      //     "User-Agent": "Mozilla/5.0",
-      //     Referer: "https://uembed.xyz/",
-      //   },
-      // });
+    // const res = await fetch(sourceLink, {
+    //   headers: {
+    //     "User-Agent": "Mozilla/5.0",
+    //     Referer: "https://abhishek1996-streambuddy.hf.space/",
+    //   },
+    // });
 
-      const res = await fetchWithTimeout(
-        sourceLink,
-        {
-          headers: {
-            "User-Agent": "Mozilla/5.0",
-            Referer: "https://uembed.xyz/",
-          },
+    const res = await fetchWithTimeout(
+      sourceLink,
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+          Referer: "https://vasurajput12345-fleet1.hf.space/",
         },
-        5000
-      ); // 5-second timeout
-
-      if (!res.ok) {
-        return NextResponse.json(
-          { success: false, error: "Upstream request failed" },
-          { status: res.status }
-        );
-      }
-
-      const data = await res.json();
-
-      if (!Array.isArray(data) || data.length === 0) {
-        return NextResponse.json(
-          { success: false, error: "No m3u8 stream found" },
-          { status: 404 }
-        );
-      }
-      const firstSource = data.find((f) => f.title === "English").file;
-      if (!sourceLink)
-        return NextResponse.json(
-          { success: false, error: "No English stream found" },
-          { status: 404 }
-        );
-
-      return NextResponse.json({
-        success: true,
-        link: firstSource,
-        type: "hls",
-      });
-    } else {
-      // const head = await fetch(sourceLink, {
-      //   method: "HEAD",
-      //   headers: {
-      //     "User-Agent": "Mozilla/5.0",
-      //     Referer: "https://madplay.site/",
-      //   },
-      // });
-      const head = await fetchWithTimeout(
-        sourceLink,
-        {
-          method: "HEAD",
-          headers: {
-            "User-Agent": "Mozilla/5.0",
-            Referer: "https://madplay.site/",
-          },
-        },
-        5000
-      ); // 5-second timeout
-      if (head.status === 404) {
-        return NextResponse.json(
-          { success: false, error: "Movie stream not found" },
-          { status: 404 }
-        );
-      }
-      if (!head.ok) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Upstream error",
-            status: head.status,
-          },
-          { status: head.status }
-        );
-      }
-      const proxy = "https://damp-bonus-5625.mosangfour.workers.dev/?url=";
-      return NextResponse.json({
-        success: true,
-        link: proxy + encodeBase64Url(sourceLink),
-        type: "hls",
-      });
+      },
+      10000
+    ); // 5-second timeout
+    if (!res.ok) {
+      return NextResponse.json(
+        { success: false, error: "Upstream request failed" },
+        { status: res.status }
+      );
     }
+
+    const data = await res.json();
+
+    if (!data?.m3u8Url) {
+      return NextResponse.json(
+        { success: false, error: "No m3u8 stream found" },
+        { status: 404 }
+      );
+    }
+    // const proxy = "https://damp-bonus-5625.mosangfour.workers.dev/?u=";
+    return NextResponse.json({
+      success: true,
+      link:
+        "https://vasurajput12345-fleet1.hf.space/api/stream?url=" +
+        encodeURIComponent(data.m3u8Url),
+      type: "hls",
+    });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: "Internal server error" },
@@ -149,16 +100,4 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-export function validateBackendToken(
-  id: string,
-  f_token: string,
-  ts: number,
-  token: string
-) {
-  if (Date.now() - ts > 8000) return false;
-  const expected = crypto
-    .createHmac("sha256", SECRET)
-    .update(`${id}:${f_token}:${ts}`)
-    .digest("hex");
-  return expected === token;
-}
+//https://streamixapp.pages.dev/
