@@ -394,9 +394,7 @@ export default function PlayerSettings({
                   <MenuButton
                     label={`Timing ${
                       selectedSub &&
-                      `(${
-                        data_sub.find((s) => s.url === selectedSub)?.display
-                      })`
+                      `(${data_sub.find((s) => s.file === selectedSub)?.label})`
                     }`}
                     onClick={() => setOpenTiming(true)}
                   />
