@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     if (!id || !media_type || !ts || !token) {
       return NextResponse.json(
         { success: false, error: "need token" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -24,13 +24,13 @@ export async function GET(req: NextRequest) {
     if (Date.now() - Number(ts) > 8000) {
       return NextResponse.json(
         { success: false, error: "Invalid token" },
-        { status: 403 }
+        { status: 403 },
       );
     }
     if (!validateBackendToken(id, f_token, ts, token)) {
       return NextResponse.json(
         { success: false, error: "Invalid token" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
     ) {
       return NextResponse.json(
         { success: false, error: "Forbidden" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
           Referer: "https://vidlink.pro/",
         },
       },
-      5000
+      5000,
     );
 
     const pathLinkData = await pathLinkResponse.json();
@@ -76,13 +76,13 @@ export async function GET(req: NextRequest) {
           Referer: "https://vidlink.pro/",
         },
       },
-      8000
+      8000,
     );
 
     if (!res.ok) {
       return NextResponse.json(
         { success: false, error: "Upstream request failed" },
-        { status: res.status }
+        { status: res.status },
       );
     }
 
@@ -91,7 +91,7 @@ export async function GET(req: NextRequest) {
     if (!data.stream.playlist) {
       return NextResponse.json(
         { success: false, error: "No sources found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -104,16 +104,56 @@ export async function GET(req: NextRequest) {
     // Optional: preserve query params if needed (e.g. host=), but we don't need headers anymore
     const search = urlObj.search; // usually has ?headers=...&host=...
 
-    const finalProxyLink = `https://blue-hat-477a.jerometecson333.workers.dev${proxyPath}${search}`;
+    //proxy links
+    //https://damp-bonus-5625.mosangfour.workers.dev/
+    //https://square-darkness-1efb.amenohabakiri174.workers.dev/
+    //https://orange-poetry-e481.jindaedalus2.workers.dev/
+    //https://long-frog-ec4e.coupdegrace21799.workers.dev/
+    //https://morning-unit-723b.jinluxus303.workers.dev/
+    //https://dark-scene-567a.jinluxuz.workers.dev/
+
+    const proxyLinks = [
+      `https://blue-hat-477a.jerometecson333.workers.dev`,
+      `https://damp-bonus-5625.mosangfour.workers.dev`,
+      `https://square-darkness-1efb.amenohabakiri174.workers.dev`,
+      `https://orange-poetry-e481.jindaedalus2.workers.dev`,
+      `https://long-frog-ec4e.coupdegrace21799.workers.dev`,
+      `https://morning-unit-723b.jinluxus303.workers.dev`,
+      `https://dark-scene-567a.jinluxuz.workers.dev`,
+    ];
+
+    let finalProxy: string | null = null;
+    for (const proxy of proxyLinks) {
+      const testUrl = `${proxy}${proxyPath}${search}`;
+      try {
+        const head = await fetch(testUrl, {
+          method: "HEAD",
+          signal: AbortSignal.timeout(1500),
+        });
+        if (head.ok) {
+          finalProxy = testUrl;
+          break;
+        }
+      } catch {
+        // try next proxy
+      }
+    }
+    if (!finalProxy) {
+      return NextResponse.json(
+        { success: false, error: "All proxies down" },
+        { status: 503 },
+      );
+    }
+
     return NextResponse.json({
       success: 200,
-      link: finalProxyLink,
+      link: finalProxy,
       type: "hls",
     });
   } catch (err) {
     return NextResponse.json(
       { success: false, error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
