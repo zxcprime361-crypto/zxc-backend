@@ -191,9 +191,7 @@ export default function Player() {
   )?.file;
   useEffect(() => {
     if (englishDefault) {
-      setSelectedSub(
-        `/api/subtitle-edit?url=${encodeURIComponent(englishDefault)}`,
-      );
+      setSelectedSub(englishDefault);
     }
   }, [englishDefault]);
 
@@ -416,7 +414,7 @@ export default function Player() {
                     {s.name}
                   </h1>
                   <h3
-                    className={`transition-transform duration-200${
+                    className={`transition-transform duration-200 text-sm${
                       idx === serverIndex
                         ? "text-foreground/80"
                         : idx === serverIndex + 1

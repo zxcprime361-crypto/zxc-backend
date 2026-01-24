@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { Subtitle } from "./subtitle-hooks";
-
 interface UseSubtitlesParams {
   tmdbId: number | null;
   season?: number; // optional for movies
@@ -23,7 +22,11 @@ export function useVdrkSubtitle({
       );
       data.sort((a: Subtitle, b: Subtitle) => a.label.localeCompare(b.label));
 
-      return data;
+      const rewritten: Subtitle[] = data.map((sub: Subtitle) => ({
+        label: sub.label,
+        file: `/api/subtitle-edit?url=${encodeURIComponent(sub.file)}`,
+      }));
+      return rewritten;
     },
     enabled: !!tmdbId,
     refetchOnWindowFocus: false,
