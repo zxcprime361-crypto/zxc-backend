@@ -38,71 +38,67 @@ export function useServerManager({
   defaultServer: number;
 }) {
   const [servers, setServers] = useState<ServerTypes[]>([
+    { name: "Daedalus I", server: 0, status: "queue", desc: "" },
     {
-      name: "Primary Server",
-      server: 2,
-      status: "queue",
-      desc: "Fallback streaming server",
-    },
-    {
-      name: "Secondary Server",
-      server: 0,
-      status: "queue",
-      desc: "Main streaming server",
-    },
-    {
-      name: "Primary Backup Server",
-      server: 3,
-      status: "queue",
-      desc: "Alternate main server",
-    },
-    {
-      name: "4K Server",
+      name: "Orion (4K) II",
       server: 1,
       status: "queue",
-      desc: "Supports 4K playback",
+      desc: "",
     },
     {
-      name: "Secondary Server 2",
+      name: "Thanatos III",
+      server: 2,
+      status: "queue",
+      desc: "",
+    },
+    {
+      name: "Aether IV",
+      server: 3,
+      status: "queue",
+      desc: "",
+    },
+
+    {
+      name: "Helios V",
       server: 4,
       status: "queue",
-      desc: "Additional fallback server",
+      desc: "",
     },
     {
-      name: "Secondary Server 3",
+      name: "Nyx VI",
       server: 5,
       status: "queue",
-      desc: "Additional fallback server",
+      desc: "",
     },
     {
-      name: "Latino Server",
+      name: "Echo VII",
       server: 6,
       status: "queue",
-      desc: "Latin American streams",
+      desc: "",
     },
     {
-      name: "PRIME Server",
+      name: "Morpheus VIII",
       server: 7,
       status: "queue",
-      desc: "High-speed priority server",
+      desc: "",
     },
     {
-      name: "Backup Server A",
+      name: "Talos IX",
       server: 50,
       status: "queue",
-      desc: "Backup server for failover",
+      desc: "",
     },
     {
-      name: "Backup Server B",
+      name: "Hypnos X",
       server: 60,
       status: "queue",
-      desc: "Backup server for failover",
+      desc: "",
     },
     {
-      name: "Backup Server C",
+      name: "Kairos XI",
       server: 70,
       status: "queue",
-      desc: "Backup server for failover",
+      desc: "",
     },
   ]);
 

@@ -104,17 +104,35 @@ export async function GET(req: NextRequest) {
       );
     }
     // Prefer "4K" or "4K HDR", fallback to "1080P" or "1080P HDR"
-    const preferredSource =
+    const finalM3u8 =
       sources.find((s) => s.quality.includes("4K")) ??
+      sources.find((s) => s.quality.includes("1080P HDR")) ??
       sources.find((s) => s.quality.includes("1080P"));
-    if (!preferredSource) {
+
+    if (!finalM3u8) {
       return NextResponse.json(
         { success: false, error: "No high-quality stream found" },
         { status: 404 },
       );
     }
-    const finalM3u8 = encodeURIComponent(preferredSource.url);
-    const proxiedUrl = `https://damp-bird-f3a9.jerometecsonn.workers.dev/?m3u8-proxy=${finalM3u8}`;
+    const finalM3u8Url = finalM3u8.url;
+    const proxies = [
+      "https://damp-bonus-5625.mosangfour.workers.dev/",
+      "https://morning-unit-723b.jinluxus303.workers.dev/",
+      "https://damp-bird-f3a9.jerometecsonn.workers.dev/",
+      "https://billowing-king-b723.jerometecson33.workers.dev/",
+      "https://square-darkness-1efb.amenohabakiri174.workers.dev/",
+      "https://snowy-recipe-f96e.jerometecson000.workers.dev/",
+    ];
+
+    const workingProxy = await getWorkingProxy(finalM3u8Url, proxies);
+    if (!workingProxy) {
+      return NextResponse.json(
+        { success: false, error: "No working proxy available" },
+        { status: 502 },
+      );
+    }
+    const proxiedUrl = `${workingProxy}?m3u8-proxy=${finalM3u8Url}`;
     return NextResponse.json({
       success: 200,
       link: proxiedUrl,
@@ -126,4 +144,17 @@ export async function GET(req: NextRequest) {
       { status: 500 },
     );
   }
+}
+export async function getWorkingProxy(url: string, proxies: string[]) {
+  for (const proxy of proxies) {
+    try {
+      const testUrl = `${proxy}?m3u8-proxy=${encodeURIComponent(url)}`;
+      const res = await fetchWithTimeout(testUrl, { method: "GET" }, 5000);
+      if (res.ok) return proxy;
+    } catch (e) {
+      console.log("Proxy failed:", proxy, e);
+      // ignore and try next
+    }
+  }
+  return null;
 }

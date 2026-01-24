@@ -1,20 +1,19 @@
+import { encodeBase64Url } from "@/lib/base64";
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import { NextRequest, NextResponse } from "next/server";
 import { validateBackendToken } from "../0/route";
 
 export async function GET(req: NextRequest) {
   try {
-    const tmdbId = req.nextUrl.searchParams.get("a");
-    const mediaType = req.nextUrl.searchParams.get("b");
+    const id = req.nextUrl.searchParams.get("a");
+    const media_type = req.nextUrl.searchParams.get("b");
     const season = req.nextUrl.searchParams.get("c");
     const episode = req.nextUrl.searchParams.get("d");
-    const title = req.nextUrl.searchParams.get("f");
-    const year = req.nextUrl.searchParams.get("g");
     const ts = Number(req.nextUrl.searchParams.get("gago"));
     const token = req.nextUrl.searchParams.get("putanginamo")!;
 
     const f_token = req.nextUrl.searchParams.get("f_token")!;
-    if (!tmdbId || !mediaType || !title || !year || !ts || !token) {
+    if (!id || !media_type || !ts || !token) {
       return NextResponse.json(
         { success: false, error: "need token" },
         { status: 404 },
@@ -28,7 +27,7 @@ export async function GET(req: NextRequest) {
         { status: 403 },
       );
     }
-    if (!validateBackendToken(tmdbId, f_token, ts, token)) {
+    if (!validateBackendToken(id, f_token, ts, token)) {
       return NextResponse.json(
         { success: false, error: "Invalid token" },
         { status: 403 },
@@ -40,7 +39,7 @@ export async function GET(req: NextRequest) {
     if (
       !referer.includes("/api/") &&
       !referer.includes("localhost") &&
-      !referer.includes("http://192.168.1.6:3000/") &&
+      !referer.includes("http://192.168.1.4:3000/") &&
       !referer.includes("https://www.zxcstream.xyz/")
     ) {
       return NextResponse.json(
@@ -48,77 +47,57 @@ export async function GET(req: NextRequest) {
         { status: 403 },
       );
     }
-    const qs = new URLSearchParams();
-    qs.set("title", title);
-    qs.set("mediaType", mediaType);
-    qs.set("year", year);
-    qs.set("tmdbId", tmdbId);
-    if (mediaType === "tv" && season) qs.set("seasonId", season);
-    if (mediaType === "tv" && episode) qs.set("episodeId", episode);
 
-    const pathLink = `https://api.videasy.net/myflixerzupcloud/sources-with-title?${qs}`;
+    const sourceLink =
+      media_type === "tv"
+        ? `https://vasurajput12345-fleet2.hf.space/api/extract?tmdbId=${id}&type=tv&season=${season}&episode=${episode}`
+        : `https://vasurajput12345-fleet2.hf.space/api/extract?tmdbId=${id}&type=movie`;
 
-    const pathLinkResponse = await fetchWithTimeout(
-      pathLink,
+    // const res = await fetch(sourceLink, {
+    //   headers: {
+    //     "User-Agent": "Mozilla/5.0",
+    //     Referer: "https://abhishek1996-streambuddy.hf.space/",
+    //   },
+    // });
+
+    const res = await fetchWithTimeout(
+      sourceLink,
       {
         headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
-          Referer: "https://videasy.net/",
+          "User-Agent": "Mozilla/5.0",
+          Referer: "https://streamixapp.pages.dev/",
         },
       },
-      5000,
-    );
-    if (!pathLinkResponse.ok) {
+      10000,
+    ); // 5-second timeout
+    if (!res.ok) {
       return NextResponse.json(
         { success: false, error: "Upstream request failed" },
-        { status: pathLinkResponse.status },
-      );
-    }
-    const encrypted = await pathLinkResponse.text();
-
-    const decrypted = await fetchWithTimeout(
-      "https://enc-dec.app/api/dec-videasy",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: encrypted, id: String(tmdbId) }),
-      },
-      8000,
-    );
-    if (!decrypted.ok) {
-      return NextResponse.json(
-        { success: false, error: "Upstream request failed" },
-        { status: decrypted.status },
+        { status: res.status },
       );
     }
 
-    const decryptedData = await decrypted.json();
+    const data = await res.json();
 
-    const sources = decryptedData.result.sources;
-
-    if (!Array.isArray(sources) || sources.length === 0) {
+    if (!data?.m3u8Url) {
       return NextResponse.json(
         { success: false, error: "No m3u8 stream found" },
         { status: 404 },
       );
     }
-    console.log("sourcessourcessources", sources);
-    const finalM3u8 = encodeURIComponent(
-      sources.find((f) => f.quality === "1080p")?.url ??
-        sources.at(0)?.url ??
-        "",
-    );
-    const proxiedUrl = `https://damp-bird-f3a9.jerometecsonn.workers.dev/?m3u8-proxy=${finalM3u8}`;
+    // const proxy = "https://damp-bonus-5625.mosangfour.workers.dev/?u=";
     return NextResponse.json({
-      success: 200,
-      link: proxiedUrl,
+      success: true,
+      link:
+        "https://vasurajput12345-fleet2.hf.space/api/stream?url=" +
+        encodeURIComponent(data.m3u8Url),
       type: "hls",
     });
-  } catch (err) {
+  } catch (error) {
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 },
     );
   }
 }
+//https://streamixapp.pages.dev/

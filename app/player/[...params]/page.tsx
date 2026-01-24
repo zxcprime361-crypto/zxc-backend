@@ -44,6 +44,7 @@ import Failed from "./failed";
 import useIntro from "@/hook/intro";
 import PlayerServer from "./servers";
 import { useVdrkSubtitle } from "@/hook/subtitle-2";
+import DynamicTip from "./dynamic-tip";
 /* ================= TYPES ================= */
 
 export default function Player() {
@@ -331,7 +332,7 @@ export default function Player() {
             exit={{ opacity: 0, scale: 1.5 }}
             transition={{ duration: 0.05 }}
           >
-            <Tailspin size="70" stroke="7" speed="0.9" color="white" />
+            <Tailspin size="80" stroke="8" speed="0.9" color="red" />
           </motion.div>
         )}
       </AnimatePresence>
@@ -458,12 +459,11 @@ export default function Player() {
     before:via-transparent 
     lg:before:to-black/80
     before:to-black/30 
-     transition-opacity duration-400
-     ${loaded ? "opacity-100 blur-none" : "opacity-0 blur-2xl"}
+    
     `}
             >
               <img
-                className={`relative z-0 h-full w-full object-cover brightness-60`}
+                className={`relative z-0 h-full w-full object-cover  transition duration-400  ${servers[serverIndex].status !== "available" ? "brightness-60" : "brightness-80"}   ${loaded ? "opacity-100 blur-none" : "opacity-0 blur-2xl"}`}
                 src={`https://image.tmdb.org/t/p/original/${metadata.backdrop_path}`}
                 alt=""
                 onLoad={() => setLoaded(true)}
@@ -471,10 +471,17 @@ export default function Player() {
 
               {isInitializing &&
                 servers[serverIndex].status === "available" && (
-                  <div className="absolute lg:bottom-10 bottom-4 right-4 lg:right-10 z-30 animate-pulse lg:text-lg  flex items-center gap-2">
-                    <h1> Please wait, fetching resources...</h1>
-                    <LineSpinner size="20" stroke="2" speed="1" color="white" />
-                  </div>
+                  <>
+                    <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
+                      <Tailspin
+                        size="80"
+                        stroke="8"
+                        speed="0.9"
+                        color="white"
+                      />
+                    </div>
+                    <DynamicTip />
+                  </>
                 )}
             </motion.div>
           )}
@@ -532,7 +539,7 @@ export default function Player() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="absolute flex gap-8  z-30"
+              className="absolute flex gap-8  z-20"
             >
               <button
                 className=""
