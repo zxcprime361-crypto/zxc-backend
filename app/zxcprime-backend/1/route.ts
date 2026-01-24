@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       link:
-        "https://vasurajput12345-fleet3.hf.space/api/stream?url=" +
+        "https://vasurajput12345-fleet2.hf.space/api/stream?url=" +
         encodeURIComponent(data.m3u8Url),
       type: "hls",
     });
