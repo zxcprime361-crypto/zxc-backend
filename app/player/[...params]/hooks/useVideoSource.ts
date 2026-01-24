@@ -72,29 +72,10 @@ export function useVideoSource({
         });
         hls.on(Hls.Events.ERROR, (_, data) => {
           if (data.fatal) {
-            // Mark server failed only on fatal errors
+            // This alone triggers server failover in your system
             updateServerStatus(serverIndex, "failed");
-
-            // Use Hls.ErrorTypes constants
-            switch (data.type) {
-              case Hls.ErrorTypes.NETWORK_ERROR:
-                // Try to recover network
-                hls.startLoad();
-                break;
-
-              case Hls.ErrorTypes.MEDIA_ERROR:
-                // Try to recover media
-                hls.recoverMediaError();
-                break;
-
-              default:
-                // Unrecoverable, destroy instance
-                hls.destroy();
-                break;
-            }
           }
-
-          // If not fatal, HLS.js will handle retries automatically
+          // Otherwise, HLS.js handles non-fatal errors automatically
         });
 
         return () => {
