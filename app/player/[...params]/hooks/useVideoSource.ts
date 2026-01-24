@@ -73,7 +73,7 @@ export function useVideoSource({
         hls.on(Hls.Events.ERROR, (_, data) => {
           console.groupCollapsed(
             "%c[HLS ERROR EVENT]",
-            "color: orange; font-weight: bold;"
+            "color: orange; font-weight: bold;",
           );
           console.log("fatal:", data.fatal);
           console.log("type:", data.type);
@@ -115,7 +115,7 @@ export function useVideoSource({
             updateServerStatus(serverIndex, "failed");
 
             console.log(
-              "[HLS] Removing ERROR listener and destroying instance"
+              "[HLS] Removing ERROR listener and destroying instance",
             );
             hls.off(Hls.Events.ERROR);
             hls.destroy();

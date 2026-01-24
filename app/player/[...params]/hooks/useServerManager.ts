@@ -35,7 +35,7 @@ export function useServerManager({
 }) {
   const [servers, setServers] = useState<ServerTypes[]>([
     { name: "ZXC Server", server: 0, status: "queue", desc: "" },
-    { name: "Main Server", server: 1, status: "queue", desc: "" },
+    // { name: "Main Server", server: 1, status: "queue", desc: "" },
     { name: "PRIME Server", server: 99, status: "queue", desc: "" },
     { name: "Server 2", server: 2, status: "queue", desc: "" },
     { name: "Server 3", server: 3, status: "queue", desc: "" },
