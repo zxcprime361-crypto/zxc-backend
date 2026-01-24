@@ -45,13 +45,7 @@ export function useServerManager({
       desc: "Main streaming server",
     },
     {
-      name: "4K Server",
-      server: 1,
-      status: "queue",
-      desc: "Supports 4K playback",
-    },
-    {
-      name: "Secondary Server 4",
+      name: "Secondary Server",
       server: 2,
       status: "queue",
       desc: "Fallback streaming server",
@@ -61,6 +55,12 @@ export function useServerManager({
       server: 3,
       status: "queue",
       desc: "Alternate main server",
+    },
+    {
+      name: "4K Server",
+      server: 1,
+      status: "queue",
+      desc: "Supports 4K playback",
     },
     {
       name: "Secondary Server 2",
