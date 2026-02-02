@@ -38,26 +38,26 @@ export function useServerManager({
   defaultServer: number;
 }) {
   const [servers, setServers] = useState<ServerTypes[]>([
-    { name: "Daedalus I", server: 0, status: "queue", desc: "" },
+    { name: "Daedalus I", server: 0, status: "queue", desc: "Main Server" },
+
     {
-      name: "Orion (4K) II",
+      name: "Thanatos II",
       server: 1,
       status: "queue",
       desc: "",
     },
     {
-      name: "Thanatos III",
+      name: "Aether III",
       server: 2,
       status: "queue",
-      desc: "",
+      desc: "May contain 4k movies",
     },
     {
-      name: "Aether IV",
+      name: "Orion IV",
       server: 3,
       status: "queue",
-      desc: "",
+      desc: "Built-In Subtitle",
     },
-
     {
       name: "Helios V",
       server: 4,
@@ -84,19 +84,19 @@ export function useServerManager({
     },
     {
       name: "Talos IX",
+      server: 8,
+      status: "queue",
+      desc: "Spanish Audio",
+    },
+    {
+      name: "Hypnos X",
       server: 50,
       status: "queue",
       desc: "",
     },
     {
-      name: "Hypnos X",
-      server: 60,
-      status: "queue",
-      desc: "",
-    },
-    {
       name: "Kairos XI",
-      server: 70,
+      server: 60,
       status: "queue",
       desc: "",
     },

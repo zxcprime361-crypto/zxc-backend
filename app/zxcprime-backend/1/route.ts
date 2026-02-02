@@ -1,7 +1,6 @@
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import { NextRequest, NextResponse } from "next/server";
-import { validateBackendToken } from "../0/route";
-
+import { validateBackendToken } from "@/lib/validate-token";
 export async function GET(req: NextRequest) {
   try {
     const tmdbId = req.nextUrl.searchParams.get("a");
@@ -41,7 +40,7 @@ export async function GET(req: NextRequest) {
       !referer.includes("/api/") &&
       !referer.includes("localhost") &&
       !referer.includes("http://192.168.1.6:3000/") &&
-      !referer.includes("https://www.zxcstream.xyz/")
+      !referer.includes("https://www.zxcprime.icu/")
     ) {
       return NextResponse.json(
         { success: false, error: "Forbidden" },
@@ -56,10 +55,10 @@ export async function GET(req: NextRequest) {
     if (mediaType === "tv" && season) qs.set("seasonId", season);
     if (mediaType === "tv" && episode) qs.set("episodeId", episode);
 
-    const pathLink = `https://api.videasy.net/cdn/sources-with-title?${qs}`;
+    const pathLink = `https://api.videasy.net/myflixerzupcloud/sources-with-title?${qs}`;
 
     const pathLinkResponse = await fetchWithTimeout(
-      pathLink,
+      `https://orange-poetry-e481.jindaedalus2.workers.dev/?url=${encodeURIComponent(pathLink)}`,
       {
         headers: {
           "User-Agent":
@@ -69,12 +68,23 @@ export async function GET(req: NextRequest) {
       },
       5000,
     );
+
     if (!pathLinkResponse.ok) {
+      const txt = await pathLinkResponse.text();
+      console.error("videasy status:", pathLinkResponse.status);
+      console.error("videasy body:", txt.slice(0, 300));
+
       return NextResponse.json(
-        { success: false, error: "Upstream request failed" },
+        {
+          success: false,
+          error: "pathLinkResponse Upstream request failed",
+          status: pathLinkResponse.status,
+          body: txt.slice(0, 200),
+        },
         { status: pathLinkResponse.status },
       );
     }
+
     const encrypted = await pathLinkResponse.text();
 
     const decrypted = await fetchWithTimeout(
@@ -88,51 +98,47 @@ export async function GET(req: NextRequest) {
     );
     if (!decrypted.ok) {
       return NextResponse.json(
-        { success: false, error: "Upstream request failed" },
+        { success: false, error: "Decrypted Upstream request failed" },
         { status: decrypted.status },
       );
     }
 
     const decryptedData = await decrypted.json();
-
     const sources = decryptedData.result.sources;
-    console.log("sourcessourcessources", sources);
+
     if (!Array.isArray(sources) || sources.length === 0) {
       return NextResponse.json(
         { success: false, error: "No m3u8 stream found" },
         { status: 404 },
       );
     }
-    // Prefer "4K" or "4K HDR", fallback to "1080P" or "1080P HDR"
-    const finalM3u8 =
-      sources.find((s) => s.quality.includes("4K")) ??
-      sources.find((s) => s.quality.includes("1080P HDR")) ??
-      sources.find((s) => s.quality.includes("1080P"));
+    console.log("sourcessourcessources", sources);
+    const finalM3u8 = encodeURIComponent(
+      sources.find((f) => f.quality === "1080p")?.url ??
+        sources.at(0)?.url ??
+        "",
+    );
 
-    if (!finalM3u8) {
-      return NextResponse.json(
-        { success: false, error: "No high-quality stream found" },
-        { status: 404 },
-      );
-    }
-    const finalM3u8Url = finalM3u8.url;
     const proxies = [
       "https://damp-bonus-5625.mosangfour.workers.dev/",
+      "https://square-darkness-1efb.amenohabakiri174.workers.dev/",
+      "https://billowing-king-b723.jerometecson33.workers.dev/",
+
+      "https://snowy-recipe-f96e.jerometecson000.workers.dev/",
+
       "https://morning-unit-723b.jinluxus303.workers.dev/",
       "https://damp-bird-f3a9.jerometecsonn.workers.dev/",
-      "https://billowing-king-b723.jerometecson33.workers.dev/",
-      "https://square-darkness-1efb.amenohabakiri174.workers.dev/",
-      "https://snowy-recipe-f96e.jerometecson000.workers.dev/",
     ];
 
-    const workingProxy = await getWorkingProxy(finalM3u8Url, proxies);
+    const workingProxy = await getWorkingProxy(finalM3u8, proxies);
     if (!workingProxy) {
       return NextResponse.json(
         { success: false, error: "No working proxy available" },
         { status: 502 },
       );
     }
-    const proxiedUrl = `${workingProxy}?m3u8-proxy=${finalM3u8Url}`;
+    const proxiedUrl = `${workingProxy}?m3u8-proxy=${finalM3u8}`;
+
     return NextResponse.json({
       success: 200,
       link: proxiedUrl,
@@ -148,12 +154,20 @@ export async function GET(req: NextRequest) {
 export async function getWorkingProxy(url: string, proxies: string[]) {
   for (const proxy of proxies) {
     try {
-      const testUrl = `${proxy}?m3u8-proxy=${encodeURIComponent(url)}`;
-      const res = await fetchWithTimeout(testUrl, { method: "GET" }, 5000);
+      const testUrl = `${proxy}?m3u8-proxy=${url}`;
+      const res = await fetchWithTimeout(
+        testUrl,
+        {
+          method: "HEAD",
+          headers: {
+            Range: "bytes=0-1",
+          },
+        },
+        3000,
+      );
       if (res.ok) return proxy;
     } catch (e) {
-      console.log("Proxy failed:", proxy, e);
-      // ignore and try next
+      // ignore failed proxy
     }
   }
   return null;

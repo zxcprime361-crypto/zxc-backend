@@ -28,7 +28,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "**/*.mts",
+    "app/zxcprime-backend/2/route.etxt"
   ],
   "exclude": ["node_modules"]
 }

@@ -1,13 +1,9 @@
+import { encodeBase64Url } from "@/lib/base64";
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import { NextRequest, NextResponse } from "next/server";
-import { validateBackendToken } from "../0/route";
+import crypto from "crypto";
+const SECRET = process.env.API_SECRET!;
 
-type Sources = {
-  link: string;
-  type: string;
-  language: string;
-  server: string;
-};
 export async function GET(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get("a");
@@ -53,48 +49,68 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const upstreamM3u8 =
+    const sourceLink =
       media_type === "tv"
-        ? `https://noticiastumbes.com/embed/xd/play.php?id=${id}&season=${season}&episode=${episode}`
-        : `https://noticiastumbes.com/embed/xd/play.php?id=${id}`;
+        ? `https://cdn.madplay.site/vxr/?id=${id}&type=tv&season=${season}&episode=${episode}`
+        : `https://cdn.madplay.site/vxr/?id=${id}&type=movie`;
 
-    try {
-      const res = await fetchWithTimeout(
-        upstreamM3u8,
-        {
-          headers: {
-            Referer: "https://noticiastumbes.com/",
-            Origin: "https://noticiastumbes.com/",
-            "User-Agent": "Mozilla/5.0",
-            Accept: "*/*",
-          },
-          cache: "no-store",
+    const res = await fetchWithTimeout(
+      sourceLink,
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+          Referer: "https://uembed.xyz/",
         },
-        8000, // 5-second timeout
-      );
+      },
+      5000,
+    ); // 5-second timeout
 
-      const data = await res.json();
-      console.log("reeeeeeeeeeeeeeeeeeeeees", data);
-
-      const spanish = data.sources.find(
-        (f: Sources) => f.language === "latino",
-      ).link;
-      console.log("liiiiiiiiiiiiiiiiiiiiiiiiink", spanish);
-      return NextResponse.json({
-        success: true,
-        link: spanish,
-        type: "hls",
-      });
-    } catch (err) {
+    if (!res.ok) {
       return NextResponse.json(
-        { success: false, error: "Timed out" },
-        { status: 504 },
+        { success: false, error: "Upstream request failed" },
+        { status: res.status },
       );
     }
-  } catch (err) {
+
+    const data = await res.json();
+
+    if (!Array.isArray(data) || data.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "No m3u8 stream found" },
+        { status: 404 },
+      );
+    }
+
+    const firstSource = data[0].file;
+
+    if (!firstSource)
+      return NextResponse.json(
+        { success: false, error: "No English stream found" },
+        { status: 404 },
+      );
+    // const type = /\.m3u8(\?|$)/i.test(firstSource.file) ? "hls" : "mp4";
+    return NextResponse.json({
+      success: true,
+      link: firstSource,
+      type: "hls",
+    });
+  } catch (error) {
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 },
     );
   }
+}
+export function validateBackendToken(
+  id: string,
+  f_token: string,
+  ts: number,
+  token: string,
+) {
+  if (Date.now() - ts > 8000) return false;
+  const expected = crypto
+    .createHmac("sha256", SECRET)
+    .update(`${id}:${f_token}:${ts}`)
+    .digest("hex");
+  return expected === token;
 }

@@ -1,8 +1,6 @@
-import { encodeBase64Url } from "@/lib/base64";
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
-const SECRET = process.env.API_SECRET!;
+import { validateBackendToken } from "@/lib/token";
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,6 +8,7 @@ export async function GET(req: NextRequest) {
     const media_type = req.nextUrl.searchParams.get("b");
     const season = req.nextUrl.searchParams.get("c");
     const episode = req.nextUrl.searchParams.get("d");
+    const imdbId = req.nextUrl.searchParams.get("e");
     const ts = Number(req.nextUrl.searchParams.get("gago"));
     const token = req.nextUrl.searchParams.get("putanginamo")!;
 
@@ -49,68 +48,51 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const sourceLink =
+    const upstreamM3u8 =
       media_type === "tv"
-        ? `https://cdn.madplay.site/vxr/?id=${id}&type=tv&season=${season}&episode=${episode}`
-        : `https://cdn.madplay.site/vxr/?id=${id}&type=movie`;
+        ? `https://scrennnifu.click/serial/${imdbId}/${season}/${episode}/playlist.m3u8`
+        : `https://scrennnifu.click/movie/${imdbId}/playlist.m3u8`;
 
-    const res = await fetchWithTimeout(
-      sourceLink,
-      {
-        headers: {
-          "User-Agent": "Mozilla/5.0",
-          Referer: "https://uembed.xyz/",
+    try {
+      const upstream = await fetchWithTimeout(
+        upstreamM3u8,
+        {
+          headers: {
+            Referer: "https://screenify.fun/",
+            Origin: "https://screenify.fun/",
+            "User-Agent": "Mozilla/5.0",
+            Accept: "*/*",
+          },
+          cache: "no-store",
         },
-      },
-      5000,
-    ); // 5-second timeout
+        12000, // 5-second timeout
+      );
 
-    if (!res.ok) {
+      if (!upstream.ok) {
+        return NextResponse.json(
+          { success: false, error: `${upstream.status}` },
+          { status: 502 },
+        );
+      }
+    } catch (err) {
       return NextResponse.json(
-        { success: false, error: "Upstream request failed" },
-        { status: res.status },
+        { success: false, error: "Timed out" },
+        { status: 504 },
       );
     }
 
-    const data = await res.json();
-
-    if (!Array.isArray(data) || data.length === 0) {
-      return NextResponse.json(
-        { success: false, error: "No m3u8 stream found" },
-        { status: 404 },
-      );
-    }
-
-    const firstSource = data[0].file;
-
-    if (!firstSource)
-      return NextResponse.json(
-        { success: false, error: "No English stream found" },
-        { status: 404 },
-      );
-    // const type = /\.m3u8(\?|$)/i.test(firstSource.file) ? "hls" : "mp4";
+    const sourceLink = `/api/zxc?id=${media_type}-${imdbId}${
+      media_type === "tv" ? `-${season}-${episode}` : ""
+    }`;
     return NextResponse.json({
       success: true,
-      link: firstSource,
+      link: sourceLink,
       type: "hls",
     });
-  } catch (error) {
+  } catch (err) {
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 },
     );
   }
-}
-export function validateBackendToken(
-  id: string,
-  f_token: string,
-  ts: number,
-  token: string,
-) {
-  if (Date.now() - ts > 8000) return false;
-  const expected = crypto
-    .createHmac("sha256", SECRET)
-    .update(`${id}:${f_token}:${ts}`)
-    .digest("hex");
-  return expected === token;
 }

@@ -1,6 +1,7 @@
+import { encodeBase64Url } from "@/lib/base64";
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import { NextRequest, NextResponse } from "next/server";
-import { validateBackendToken } from "../0/route";
+import { validateBackendToken } from "@/lib/token";
 
 export async function GET(req: NextRequest) {
   try {
@@ -8,7 +9,6 @@ export async function GET(req: NextRequest) {
     const media_type = req.nextUrl.searchParams.get("b");
     const season = req.nextUrl.searchParams.get("c");
     const episode = req.nextUrl.searchParams.get("d");
-    const imdbId = req.nextUrl.searchParams.get("e");
     const ts = Number(req.nextUrl.searchParams.get("gago"));
     const token = req.nextUrl.searchParams.get("putanginamo")!;
 
@@ -48,51 +48,56 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const upstreamM3u8 =
+    const sourceLink =
       media_type === "tv"
-        ? `https://scrennnifu.click/serial/${imdbId}/${season}/${episode}/playlist.m3u8`
-        : `https://scrennnifu.click/movie/${imdbId}/playlist.m3u8`;
+        ? `https://vasurajput12345-fleet2.hf.space/api/extract?tmdbId=${id}&type=tv&season=${season}&episode=${episode}`
+        : `https://vasurajput12345-fleet2.hf.space/api/extract?tmdbId=${id}&type=movie`;
 
-    try {
-      const upstream = await fetchWithTimeout(
-        upstreamM3u8,
-        {
-          headers: {
-            Referer: "https://screenify.fun/",
-            Origin: "https://screenify.fun/",
-            "User-Agent": "Mozilla/5.0",
-            Accept: "*/*",
-          },
-          cache: "no-store",
+    // const res = await fetch(sourceLink, {
+    //   headers: {
+    //     "User-Agent": "Mozilla/5.0",
+    //     Referer: "https://abhishek1996-streambuddy.hf.space/",
+    //   },
+    // });
+
+    const res = await fetchWithTimeout(
+      sourceLink,
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+          Referer: "https://streamixapp.pages.dev/",
         },
-        12000, // 5-second timeout
-      );
-
-      if (!upstream.ok) {
-        return NextResponse.json(
-          { success: false, error: `${upstream.status}` },
-          { status: 502 },
-        );
-      }
-    } catch (err) {
+      },
+      10000,
+    ); // 5-second timeout
+    if (!res.ok) {
       return NextResponse.json(
-        { success: false, error: "Timed out" },
-        { status: 504 },
+        { success: false, error: "Upstream request failed" },
+        { status: res.status },
       );
     }
 
-    const sourceLink = `/api/zxc?id=${media_type}-${imdbId}${
-      media_type === "tv" ? `-${season}-${episode}` : ""
-    }`;
+    const data = await res.json();
+
+    if (!data?.m3u8Url) {
+      return NextResponse.json(
+        { success: false, error: "No m3u8 stream found" },
+        { status: 404 },
+      );
+    }
+    // const proxy = "https://damp-bonus-5625.mosangfour.workers.dev/?u=";
     return NextResponse.json({
       success: true,
-      link: sourceLink,
+      link:
+        "https://vasurajput12345-fleet2.hf.space/api/stream?url=" +
+        encodeURIComponent(data.m3u8Url),
       type: "hls",
     });
-  } catch (err) {
+  } catch (error) {
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 },
     );
   }
 }
+//https://streamixapp.pages.dev/

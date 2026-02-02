@@ -1,7 +1,7 @@
 import { encodeBase64Url } from "@/lib/base64";
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import { NextRequest, NextResponse } from "next/server";
-import { validateBackendToken } from "../0/route";
+import { validateBackendToken } from "@/lib/token";
 
 export async function GET(req: NextRequest) {
   try {
