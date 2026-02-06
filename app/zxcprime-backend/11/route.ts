@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
         { status: 403 },
       );
     }
-    const ip = randomIPv4();
+    const ip = africanLikeIP();
     // -------- MovieBox Logic --------
     const host = "h5.aoneroom.com";
     const baseUrl = `https://${host}`;
@@ -171,8 +171,12 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-function randomIPv4() {
-  return Array.from({ length: 4 }, () => Math.floor(Math.random() * 256)).join(
-    ".",
-  );
+function africanLikeIP() {
+  const firstOctets = [41, 102, 105, 154, 160, 165, 196];
+  return [
+    firstOctets[Math.floor(Math.random() * firstOctets.length)],
+    Math.floor(Math.random() * 256),
+    Math.floor(Math.random() * 256),
+    Math.floor(Math.random() * 256),
+  ].join(".");
 }
