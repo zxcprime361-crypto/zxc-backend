@@ -57,9 +57,10 @@ export async function GET(req: NextRequest) {
       "Accept-Language": "en-US,en;q=0.5",
       Accept: "application/json",
       "User-Agent": "okhttp/4.12.0",
-      Referer: baseUrl,
-      Host: host,
-      Connection: "keep-alive",
+      Referer: "https://movieboxapp.in",
+      "X-Forwarded-For": "197.178.200.45",
+      "CF-Connecting-IP": "197.178.200.45",
+      "X-Real-IP": "197.178.200.45",
     };
 
     // Search for movie/TV show
