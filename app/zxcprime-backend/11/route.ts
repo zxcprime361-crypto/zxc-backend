@@ -1,6 +1,59 @@
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import { NextRequest, NextResponse } from "next/server";
 import { validateBackendToken } from "@/lib/validate-token";
+let lastWorkingIP: string | null = null;
+
+async function testIP(ip: string, title: string, mediaType: string) {
+  try {
+    const host = "h5.aoneroom.com";
+    const baseUrl = `https://${host}`;
+    const headers = {
+      "X-Client-Info": '{"timezone":"Africa/Nairobi"}',
+      "Accept-Language": "en-US,en;q=0.5",
+      Accept: "application/json",
+      "User-Agent": "okhttp/4.12.0",
+      "X-Forwarded-For": ip,
+      "CF-Connecting-IP": ip,
+      "X-Real-IP": ip,
+      Origin: "https://fmoviesunblocked.net",
+    };
+    const res = await fetch(`${baseUrl}/wefeed-h5-bff/web/subject/search`, {
+      method: "POST",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        keyword: title,
+        page: 1,
+        perPage: 1,
+        subjectType: mediaType === "tv" ? 2 : 1,
+      }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+// Get a working IP (sticky + retry)
+async function getWorkingIP(title: string, mediaType: string) {
+  // 1. Try last working IP
+  if (lastWorkingIP && (await testIP(lastWorkingIP, title, mediaType))) {
+    return lastWorkingIP;
+  }
+
+  // 2. Retry random IPs up to 5 times
+  for (let i = 0; i < 5; i++) {
+    const ip = africanLikeIP();
+    if (await testIP(ip, title, mediaType)) {
+      lastWorkingIP = ip; // save working IP
+      return ip;
+    }
+  }
+
+  // 3. Fallback to random IP even if it might fail
+  const fallbackIP = africanLikeIP();
+  lastWorkingIP = fallbackIP;
+  return fallbackIP;
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -49,7 +102,7 @@ export async function GET(req: NextRequest) {
         { status: 403 },
       );
     }
-    const ip = africanLikeIP();
+    const ip = await getWorkingIP(title, mediaType);
     // -------- MovieBox Logic --------
     const host = "h5.aoneroom.com";
     const baseUrl = `https://${host}`;
