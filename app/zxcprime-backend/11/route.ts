@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
     if (
       !referer.includes("/api/") &&
       !referer.includes("localhost") &&
-      !referer.includes("http://192.168.1.6:3000/") &&
+      !referer.includes("http://192.168.56.1:3000/") &&
       !referer.includes("https://www.zxcstream.xyz/") &&
       !referer.includes("https://zxcstream-xyz.netlify.app/")
     ) {
@@ -170,24 +170,7 @@ function africanLikeIP() {
   ].join(".");
 }
 const africanIPs = [
-  { ip: "41.89.77.202" },
-  { ip: "41.60.12.155" },
-  { ip: "102.165.45.78" },
-  { ip: "105.112.98.33" },
-  { ip: "154.72.201.144" },
-  { ip: "160.19.88.202" },
-  { ip: "165.225.10.67" },
-  { ip: "196.25.189.90" },
-  { ip: "197.177.248.181" },
-  { ip: "41.204.33.77" },
-  { ip: "102.48.11.200" },
-  { ip: "105.16.99.122" },
-  { ip: "154.123.45.67" },
-  { ip: "160.45.210.89" },
-  { ip: "165.44.78.210" },
-  { ip: "196.218.56.34" },
-  { ip: "197.210.77.45" },
-  { ip: "41.79.33.111" },
-  { ip: "102.215.144.22" },
-  { ip: "105.56.78.99" },
+  { ip: "41.90.65.134" },
+  { ip: "41.204.187.92" },
+  { ip: "41.215.122.41" },
 ];
