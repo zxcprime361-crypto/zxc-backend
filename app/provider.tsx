@@ -8,22 +8,22 @@ export default function Provider({ children }: { children: React.ReactNode }) {
   const [isMounted, setIsMounted] = useState(false);
   const [queryClient] = useState(() => new QueryClient());
 
-  useEffect(() => {
-    if (process.env.NODE_ENV === "production") {
-      DisableDevtool({
-        disableMenu: true, // Disable right click
-        disableSelect: false, // Disable text selection
-        disableCopy: false, // Disable copy
-        disableCut: false, // Disable cut
-        disablePaste: false, // Disable paste
-        clearLog: true, // Auto clear console
-        interval: 1000, // Devtool detection interval (ms)
-        ondevtoolopen: () => {
-          window.location.href = "/"; // Redirect if devtools opened
-        },
-      });
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (process.env.NODE_ENV === "production") {
+  //     DisableDevtool({
+  //       disableMenu: true, // Disable right click
+  //       disableSelect: false, // Disable text selection
+  //       disableCopy: false, // Disable copy
+  //       disableCut: false, // Disable cut
+  //       disablePaste: false, // Disable paste
+  //       clearLog: true, // Auto clear console
+  //       interval: 1000, // Devtool detection interval (ms)
+  //       ondevtoolopen: () => {
+  //         window.location.href = "/"; // Redirect if devtools opened
+  //       },
+  //     });
+  //   }
+  // }, []);
   useEffect(() => {
     setIsMounted(true);
   }, []);
