@@ -24,6 +24,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isProduction = process.env.NODE_ENV === "production";
   return (
     <html lang="en">
       <head>
@@ -44,6 +45,13 @@ export default function RootLayout({
             `,
           }}
         />
+        {isProduction && (
+          <Script
+            src="https://cdn.jsdelivr.net/npm/disable-devtool@latest"
+            strategy="beforeInteractive"
+            disable-devtool-auto=""
+          />
+        )}
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
